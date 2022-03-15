@@ -1,14 +1,18 @@
+import time
+
 import scrapy
 
 
 class AbcSpider(scrapy.Spider):
+
+    song_n = 0
     name = 'abc'
     # allowed_domains = ['www.xxx.com']
-    start_urls = ['https://www.lyrics.com/artists/A/1']
+    start_urls = ['https://www.lyrics.com/artists/G/80']
 
     # 生成通用对url
-    url = 'https://www.lyrics.com/artists/A/%d'
-    page_num = 2
+    url = 'https://www.lyrics.com/artists/G/%d'
+    page_num = 82
     '''
         https://www.lyrics.com/artist        /A-%26-D/2137936791
     '''
@@ -22,15 +26,18 @@ class AbcSpider(scrapy.Spider):
             artist_url = ''.join(tr.xpath('./td[1]/a/@href | ./td[1]/strong/a/@href').extract())
             # print(artist_url)
             base_url = 'https://www.lyrics.com/artist/{}'.format(artist_url)
+            print(base_url)
             yield scrapy.Request(url=base_url, callback=self.parse_artist)
 
 
 
+        if self.page_num <= 90:
 
-        if self.page_num <= 1543:
             new_url = format(self.url%self.page_num)
             self.page_num += 1
+
             yield scrapy.Request(url=new_url, callback=self.parse)
+
 
     '''
         https://www.lyrics.com    /lyric-lf/4846253/A+%26+D/Rugburn
@@ -53,6 +60,8 @@ class AbcSpider(scrapy.Spider):
             yield scrapy.Request(url=base_url, callback=self.parse_song)
 
     def parse_song(self, response):
+        self.song_n += 1
+
         song_name = ''.join(response.xpath('//hgroup/h1/text()').extract())
         # print(song_name)
         artist_name = ''.join(response.xpath('//hgroup/h3/a/text()').extract_first())
@@ -67,6 +76,8 @@ class AbcSpider(scrapy.Spider):
         # print(aaa)
 
         yield {
+            'N': self.song_n,
+            'page': self.page_num,
             'title': song_name,
             'artist': artist_name,
             'duration': duration,
